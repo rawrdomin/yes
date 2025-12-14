@@ -4,7 +4,8 @@ import javafx.scene.image.ImageView;
 public class Skeleton {
 
     private final ImageView view;
-    private int health = 3;
+    private final int maxHealth = 50;
+    private int currentHealth = 50;
     private boolean alive = true;
     private double velocityY = 0;
     private double y;
@@ -30,6 +31,7 @@ public class Skeleton {
         view.setX(startX);
         y = groundLevel;
         view.setY(y);
+        lastX = startX;
 
         runImages = new Image[8];
         for (int i = 0; i < runImages.length; i++) {
@@ -61,13 +63,48 @@ public class Skeleton {
     public void markAttackHit() {
         attackDamageDealt = true;
     }
+    
+    private double lastX = 0;
+    private boolean wasMoving = false;
+    
+    public boolean isRunning() {
+        double currentX = view.getX();
+        boolean moving = Math.abs(currentX - lastX) > 0.5;
+        lastX = currentX;
+        return !attacking && moving;
+    }
+    
+    public int getCurrentRunFrame() {
+        return currentRunFrame;
+    }
+    
+    public long getLastRunFrameTime() {
+        return lastRunFrameTime;
+    }
+    
+    public long getRunFrameDuration() {
+        return runFrameDuration;
+    }
 
     public void hit() {
         if (!alive) return;
-        health -= 1;
-        if (health <= 0) {
+        currentHealth -= 15;
+        if (currentHealth <= 0) {
+            currentHealth = 0;
             alive = false;
         }
+    }
+    
+    public int getMaxHealth() {
+        return maxHealth;
+    }
+    
+    public int getCurrentHealth() {
+        return currentHealth;
+    }
+    
+    public double getHealthPercentage() {
+        return (double) currentHealth / maxHealth;
     }
 
     public void applyGravity(double gravity, double groundLevel) {

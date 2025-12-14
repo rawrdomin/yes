@@ -4,7 +4,8 @@ import javafx.scene.image.ImageView;
 public class SkeletonArcher {
 
     private final ImageView view;
-    private int health = 3;
+    private final int maxHealth = 30;
+    private int currentHealth = 30;
     private boolean alive = true;
     private double velocityY = 0;
     private double y;
@@ -17,6 +18,7 @@ public class SkeletonArcher {
     private final long attackCooldown = 2_000_000_000L; 
     private boolean attacking = false;
     private boolean attackDamageDealt = false;
+    private boolean arrowShot = false;
 
     public SkeletonArcher(double startX, double groundLevel) {
         idleImage = new Image(getClass().getResource("/images/ArcherIdle1.png").toExternalForm());
@@ -48,6 +50,18 @@ public class SkeletonArcher {
         return attacking && !attackDamageDealt && currentAttackFrame == 10;
     }
     
+    public boolean shouldShootArrow() {
+        return attacking && currentAttackFrame == 10 && !arrowShot;
+    }
+    
+    public void markArrowShot() {
+        arrowShot = true;
+    }
+    
+    public int getDirection() {
+        return view.getScaleX() > 0 ? 1 : -1;
+    }
+    
     public double getCenterX() {
         return view.getX() + view.getFitWidth() / 2.0;
     }
@@ -62,10 +76,23 @@ public class SkeletonArcher {
 
     public void hit() {
         if (!alive) return;
-        health -= 1;
-        if (health <= 0) {
+        currentHealth -= 15;
+        if (currentHealth <= 0) {
+            currentHealth = 0;
             alive = false;
         }
+    }
+    
+    public int getMaxHealth() {
+        return maxHealth;
+    }
+    
+    public int getCurrentHealth() {
+        return currentHealth;
+    }
+    
+    public double getHealthPercentage() {
+        return (double) currentHealth / maxHealth;
     }
 
     public void applyGravity(double gravity, double groundLevel) {
@@ -96,6 +123,7 @@ public class SkeletonArcher {
                 if (currentAttackFrame >= attackImages.length) {
                     attacking = false;
                     attackDamageDealt = false;
+                    arrowShot = false;
                     currentAttackFrame = 0;
                     view.setImage(idleImage);
                 } else {
@@ -105,9 +133,10 @@ public class SkeletonArcher {
             return;
         }
 
-        if (Math.abs(distance) <= minDistance && (now - lastAttackStartTime) >= attackCooldown) {
+        if ((now - lastAttackStartTime) >= attackCooldown) {
             attacking = true;
             attackDamageDealt = false;
+            arrowShot = false;
             currentAttackFrame = 0;
             lastAttackFrameTime = now;
             lastAttackStartTime = now;
